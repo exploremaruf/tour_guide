@@ -4,20 +4,19 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.animation.ValueAnimator
+import android.view.ViewGroup
 import androidx.core.view.doOnLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import android.view.animation.DecelerateInterpolator
 
 class AnimatedBottomBar @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : BottomNavigationView(context, attrs, defStyleAttr) {
 
     private val path = Path()
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.parseColor("#1E3A8A")
+        color = Color.parseColor("#121B22")
     }
 
     private var targetX = 0f
@@ -28,19 +27,46 @@ class AnimatedBottomBar @JvmOverloads constructor(
         // Required so onDraw() actually gets called on a ViewGroup
         setWillNotDraw(false)
 
-        // Remove standard M3 background tints and indicators
-        setBackgroundColor(Color.TRANSPARENT)
+
+        background = null
+        elevation = 0f
+        backgroundTintList = null
+        itemBackground = null
+
+
         setItemActiveIndicatorColor(android.content.res.ColorStateList.valueOf(Color.TRANSPARENT))
 
         // Listen for item selection transitions
         setOnItemSelectedListener { item ->
+
+            val menuView = getChildAt(0) as? ViewGroup
+
+            // reset + animate all items first
+            menuView?.let { vg ->
+                for (i in 0 until vg.childCount) {
+                    val child = vg.getChildAt(i)
+
+                    child.animate().translationY(0f).scaleX(1f).scaleY(1f).setDuration(200).start()
+                }
+            }
+
+            // find selected index safely
+            val itemIndex =
+                (0 until menu.size()).firstOrNull { menu.getItem(it).itemId == item.itemId } ?: 0
+
+            val selectedView = (menuView?.getChildAt(itemIndex))
+
+            // selected item pop-up animation
+            selectedView?.animate()?.translationY(-18f)   // 👈 lift up
+                ?.scaleX(1.15f)        // 👈 enlarge
+                ?.scaleY(1.15f)?.setDuration(250)?.start()
+
+            // wave bump center calculation
             val itemWidth = width / menu.size()
+            val centerX = itemIndex * itemWidth + (itemWidth / 2f)
 
-            // Dynamically find which index was clicked (0, 1, 2, etc.)
-            val itemIndex = (0 until menu.size()).firstOrNull { menu.getItem(it).itemId == item.itemId } ?: 0
+            animateBump(centerX)
 
-            // Animate the organic wave bump to the center of the clicked icon
-            animateBump(itemIndex * itemWidth + (itemWidth / 2f))
             true
         }
 
@@ -61,7 +87,7 @@ class AnimatedBottomBar @JvmOverloads constructor(
         animator?.cancel()
         animator = ValueAnimator.ofFloat(currentX, toX).apply {
             duration = 350
-            interpolator = DecelerateInterpolator(1.5f)
+            interpolator = android.view.animation.OvershootInterpolator(3f)
             addUpdateListener {
                 currentX = it.animatedValue as Float
                 invalidate()
@@ -85,22 +111,27 @@ class AnimatedBottomBar @JvmOverloads constructor(
 
         // Left curve into peak
         path.cubicTo(
-            currentX - (bumpWidth / 4f), bumpHeight,
-            currentX - (bumpWidth / 4f), 0f,
-            currentX, 0f
+            currentX - (bumpWidth / 4f), bumpHeight, currentX - (bumpWidth / 4f), 0f, currentX, 0f
         )
         // Right curve out of peak back to baseline
         path.cubicTo(
-            currentX + (bumpWidth / 4f), 0f,
-            currentX + (bumpWidth / 4f), bumpHeight,
-            currentX + (bumpWidth / 2f) + 20f, bumpHeight
+            currentX + (bumpWidth / 4f),
+            0f,
+            currentX + (bumpWidth / 4f),
+            bumpHeight,
+            currentX + (bumpWidth / 2f) + 20f,
+            bumpHeight
         )
 
         // 3. Complete the outer bounding box with rounded corners
         path.lineTo(width.toFloat() - cornerRadius, bumpHeight)
-        path.quadTo(width.toFloat(), bumpHeight, width.toFloat(), bumpHeight + cornerRadius) // Top Right
+        path.quadTo(
+            width.toFloat(), bumpHeight, width.toFloat(), bumpHeight + cornerRadius
+        ) // Top Right
         path.lineTo(width.toFloat(), height.toFloat() - cornerRadius)
-        path.quadTo(width.toFloat(), height.toFloat(), width.toFloat() - cornerRadius, height.toFloat()) // Bottom Right
+        path.quadTo(
+            width.toFloat(), height.toFloat(), width.toFloat() - cornerRadius, height.toFloat()
+        ) // Bottom Right
         path.lineTo(cornerRadius, height.toFloat())
         path.quadTo(0f, height.toFloat(), 0f, height.toFloat() - cornerRadius) // Bottom Left
         path.lineTo(0f, bumpHeight + cornerRadius)
