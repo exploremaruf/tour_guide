@@ -1,19 +1,40 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tourist Places of Bangladesh"
-        android:textSize="22sp"
-        android:textStyle="bold"/>
+   <RelativeLayout
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:layout_alignParentTop="true"
+       android:padding="16dp"
+       >
+       <TextView
+           android:id="@+id/title"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="Tourist Places of Bangladesh"
+           android:textSize="22sp"
+           android:textStyle="bold"
+           android:layout_alignParentTop="true"/>
 
-    <ListView
-        android:id="@+id/listView"
+       <ListView
+           android:layout_below="@+id/title"
+           android:id="@+id/listView"
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"/>
+
+   </RelativeLayout>
+
+    <com.example.tourguide.AnimatedBottomBar
+        android:id="@+id/animatedBottomBar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-</LinearLayout>
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        app:menu="@menu/bottom_menu"
+        app:labelVisibilityMode="labeled"
+        app:itemIconTint="#FFFFFF"
+        app:itemTextColor="#ffffff"
+        app:itemRippleColor="@android:color/transparent" />
+</RelativeLayout>
