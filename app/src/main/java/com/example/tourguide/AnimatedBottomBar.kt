@@ -16,7 +16,7 @@ class AnimatedBottomBar @JvmOverloads constructor(
     private val path = Path()
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.parseColor("#121B22")
+        color = Color.parseColor("#ffffff")
     }
 
     private var targetX = 0f
