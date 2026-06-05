@@ -17,18 +17,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val listView = findViewById<ListView>(R.id.listView)
-
-        // টেস্ট করার জন্য কাস্টম অ্যাডাপ্টার সেট (২০ বার রিপিট হবে)
-        val adapter = TestListAdapter(itemCount = 20)
-        listView.adapter = adapter
-
-        listView.setOnItemClickListener { _, _, position, _ ->
-            // টেস্ট রান সফল হলে এখানে আসল ডাটা পজিশন অনুযায়ী পাঠানো যাবে
-            val intent = Intent(this, DetailActivity::class.java)
-            intent.putExtra("index", position)
-            startActivity(intent)
-        }
+//        val listView = findViewById<ListView>(R.id.listView)
+//
+//        // টেস্ট করার জন্য কাস্টম অ্যাডাপ্টার সেট (২০ বার রিপিট হবে)
+//        val adapter = TestListAdapter(itemCount = 20)
+//        listView.adapter = adapter
+//
+//        listView.setOnItemClickListener { _, _, position, _ ->
+//            // টেস্ট রান সফল হলে এখানে আসল ডাটা পজিশন অনুযায়ী পাঠানো যাবে
+//            val intent = Intent(this, DetailActivity::class.java)
+//            intent.putExtra("index", position)
+//            startActivity(intent)
+//        }
     }
 
     // টেস্টের জন্য কাস্টম লিস্ট অ্যাডাপ্টার
