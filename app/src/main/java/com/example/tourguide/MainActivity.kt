@@ -1,57 +1,110 @@
 package com.example.tourguide
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.ImageView
-import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.google.android.material.progressindicator.CircularProgressIndicator
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        var isRefreshing = false
+    }
+
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        val listView = findViewById<ListView>(R.id.listView)
-//
-//        // টেস্ট করার জন্য কাস্টম অ্যাডাপ্টার সেট (২০ বার রিপিট হবে)
-//        val adapter = TestListAdapter(itemCount = 20)
-//        listView.adapter = adapter
-//
-//        listView.setOnItemClickListener { _, _, position, _ ->
-//            // টেস্ট রান সফল হলে এখানে আসল ডাটা পজিশন অনুযায়ী পাঠানো যাবে
-//            val intent = Intent(this, DetailActivity::class.java)
-//            intent.putExtra("index", position)
-//            startActivity(intent)
-//        }
+
+        val rvTrendingDestinations = findViewById<RecyclerView>(R.id.rvTrendingDestinations)
+        val loadingIndicator = findViewById<CircularProgressIndicator>(R.id.loadingIndicator)
+
+        if (isRefreshing) {
+            loadingIndicator.visibility = View.VISIBLE
+            rvTrendingDestinations.alpha = 0f
+
+            window.decorView.postDelayed({
+                loadingIndicator.visibility = View.GONE
+                rvTrendingDestinations.animate().alpha(1f).setDuration(300).start()
+                isRefreshing = false
+            }, 300)
+        }
+
+        val placesList = DataSource.places
+
+        val adapter = TrendingPlacesAdapter(placesList) { position ->
+            val intent = Intent(this, DetailActivity::class.java).apply {
+                putExtra("index", position)
+            }
+            startActivity(intent)
+        }
+
+        rvTrendingDestinations.adapter = adapter
+
+        rvTrendingDestinations.layoutManager =
+            androidx.recyclerview.widget.StaggeredGridLayoutManager(
+                2,
+                androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
+            )
+
+        val bottomBar = findViewById<AnimatedBottomBar>(R.id.animatedBottomBar)
+        bottomBar.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.home -> {
+                    isRefreshing = true
+                    recreate()
+                    true
+                }
+
+                else -> true
+            }
+        }
     }
 
-    // টেস্টের জন্য কাস্টম লিস্ট অ্যাডাপ্টার
-    class TestListAdapter(private val itemCount: Int) : BaseAdapter() {
+    //*******************end of on create****************************************************************
 
-        override fun getCount(): Int = itemCount
+    class TrendingPlacesAdapter(
+        private val places: List<Place>,
+        private val onItemClick: (Int) -> Unit
+    ) : RecyclerView.Adapter<TrendingPlacesAdapter.PlaceViewHolder>() {
 
-        override fun getItem(position: Int): Any = position
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaceViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_destination_card, parent, false)
+            return PlaceViewHolder(view)
+        }
 
-        override fun getItemId(position: Int): Long = position.toLong()
+        override fun onBindViewHolder(holder: PlaceViewHolder, position: Int) {
+            val currentPlace = places[position]
+            holder.tvDestinationTitle.text = currentPlace.name
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val view = convertView ?: LayoutInflater.from(parent?.context)
-                .inflate(R.layout.item_place, parent, false)
+            val layoutParams = holder.ivDestinationImage.layoutParams
+            layoutParams.height = if (position % 2 == 0) 650 else 800
+            holder.ivDestinationImage.layoutParams = layoutParams
 
-            val placeName = view.findViewById<TextView>(R.id.placeName)
-            val placeDescription = view.findViewById<TextView>(R.id.placeDescription)
+            Glide.with(holder.itemView.context)
+                .load(currentPlace.image)
+                .apply(com.bumptech.glide.request.RequestOptions.centerCropTransform())
+                .placeholder(R.drawable.japan)
+                .into(holder.ivDestinationImage)
 
-            // টেস্ট করার জন্য নামের শেষে নাম্বার যোগ করে দিচ্ছি
-            placeName.text = "Chittagong Spot ${position + 1}"
-            placeDescription.text = "Beautiful sea port city with hills and natural beauty. (Spot No. ${position + 1})"
+            holder.itemView.setOnClickListener { onItemClick(position) }
+        }
 
-            return view
+        override fun getItemCount(): Int = places.size
+
+        class PlaceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val ivDestinationImage: ImageView = itemView.findViewById(R.id.ivDestinationImage)
+            val tvDestinationTitle: TextView = itemView.findViewById(R.id.tvDestinationTitle)
         }
     }
 }
